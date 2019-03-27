@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block body %}
+  {% if article %}
+    {% module ArticleDetail(article) %}
+  {% end %}
+<link rel="stylesheet" href="{{ static_url('css/blog_code-c3a0c33d5c.css') }}">
+{% end %}

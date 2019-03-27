@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main id="site-main" class="site-main">
+        <div class="inner">
+            <div class="post-feed">
+                {% for article in articles %}
+                {% module Article(article) %}
+                {% end %}
+            </div>
+        </div>
+</main>
+<input type="hidden" name="_next_url" value="2">
+<script src="{{ static_url('js/home.js') }}"></script>
+{% end %}

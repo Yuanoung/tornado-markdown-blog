@@ -1,0 +1,62 @@
+<body class="post-template">
+<div class="site-wrapper">
+    <main id="site-main" class="site-main outer">
+        <div class="inner">
+            <article class="post-full post ">
+                <header class="post-full-header">
+                    <h1 class="post-full-title">{{ article.title }}</h1>
+                    <section class="post-full-meta">
+                        <time class="post-full-meta-date"
+                              datetime="{{ article.published }}">{{ article.published }}&nbsp;&nbsp;{{ article.category }}{% if current_user %}&nbsp;&nbsp;<a
+                                href="/article/create?article_id={{ article.id }}">编辑</a>{% end %}
+                        </time>
+                    </section>
+                </header>
+
+                <section class="post-full-content">
+                    <div class="container clearfix" id="mainBox">
+                        <main>
+                            <div class="blog-content-box">
+                                <article class="baidu_pl">
+                                    <div id="article_content" class="article_content clearfix csdn-tracking-statistics"
+                                         data-pid="blog"
+                                         data-mod=popu_307 data-dsm="post">
+                                        <div id="content_views" class="markdown_views prism-atom-one-dark">
+                                            {% raw article.content %}
+                                        </div>
+                                        <link href="{{ static_url('css/markdown_views-258a4616f7.css') }}"
+                                              rel="stylesheet">
+                                    </div>
+                                </article>
+                            </div>
+                            <script>
+                                $(".MathJax").remove();
+                                if ($('div.markdown_views pre.prettyprint code.hljs').length > 0) {
+                                    $('div.markdown_views')[0].className = 'markdown_views';
+                                }
+                            </script>
+
+                        </main>
+
+                    </div>
+                </section>
+            </article>
+
+        </div>
+    </main>
+
+
+    <footer class="site-footer outer">
+        <div class="site-footer-content inner">
+            <section class="copyright"><a href="/">The Yuanoung Blog</a> &copy; 2019
+            </section>
+            <nav class="site-footer-nav">
+                <a href="https://github.com/Yuanoung" target="_blank" rel="noopener">GitHub</a>
+            </nav>
+        </div>
+    </footer>
+</div>
+
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</body>
+

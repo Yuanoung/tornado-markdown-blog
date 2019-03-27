@@ -148,29 +148,39 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
 class HomeHandler(BaseHandler):
-    page_size = 5
+    page_size = 10
 
     async def get(self):
-        title = self.get_argument("title", "....................#")
-        category = self.get_argument("category", "....")
-        print(category)
-        categories = ["Python", "Django", "Docker", "操作系统", "程序员的自我修养"]  # todo
-        page = int(self.get_argument("page", 1)) - 1
+        title = self.get_argument("title", None)
+        category = self.get_argument("category", None)
+        page = int(self.get_argument("page", 0))
         offset = self.page_size * page
-        articles = await self.query(
-            "SELECT * FROM articles ORDER BY published DESC LIMIT %s,%s",
-            offset,
-            self.page_size
-        )
+
+        with (await self.application.db) as conn:
+            cur = await conn.cursor(AttrDictCursor)
+            await cur.execute("SELECT DISTINCT category FROM articles")
+            r = await cur.fetchall()
+            categories = [value["category"] for value in r]
+
+            if title and category:
+                args = ("SELECT * FROM articles where category = %s, title like %s ORDER BY published DESC LIMIT %s,%s",
+                        (category, "%" + title + "%", offset, self.page_size))
+            elif title:
+                args = ("SELECT * FROM articles where title like %s ORDER BY published DESC LIMIT %s,%s",
+                        ("%" + title + "%", offset, self.page_size))
+            elif category:
+                args = ("SELECT * FROM articles where category = %s ORDER BY published DESC LIMIT %s,%s",
+                        (category, offset, self.page_size))
+            else:
+                args = ("SELECT * FROM articles ORDER BY published DESC LIMIT %s,%s",
+                        (offset, self.page_size))
+            await cur.execute(*args)
+            articles = await cur.fetchall()
+
         if not articles:
-            self.finish()
-        total = await self.queryone(
-            "SELECT COUNT(*) as total FROM articles"
-        )
-        total = total.get("total")
+            return
+
         next_url = None
-        if total > (page + 1) * self.page_size:
-            next_url = "/?page=" + str(page + 2)
         if not page:
             self.render("home.html", articles=articles, next_url=next_url, categories=categories)
         else:

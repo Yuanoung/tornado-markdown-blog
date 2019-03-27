@@ -163,8 +163,7 @@ class HomeHandler(BaseHandler):
             self.page_size
         )
         if not articles:
-            self.redirect("/auth/create")
-            return
+            self.finish()
         total = await self.queryone(
             "SELECT COUNT(*) as total FROM articles"
         )

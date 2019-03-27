@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import re
 import html
 import aiomysql
 import bcrypt
@@ -163,23 +164,23 @@ class HomeHandler(BaseHandler):
             categories = [value["category"] for value in r]
 
             if title and category:
-                args = ("SELECT * FROM articles where category = %s, title like %s ORDER BY published DESC LIMIT %s,%s",
+                args = ("SELECT id, title, published, abstract, category FROM articles where category = %s, title like %s ORDER BY published DESC LIMIT %s,%s",
                         (category, "%" + title + "%", offset, self.page_size))
             elif title:
-                args = ("SELECT * FROM articles where title like %s ORDER BY published DESC LIMIT %s,%s",
+                args = ("SELECT id, title, published, abstract, category FROM articles where title like %s ORDER BY published DESC LIMIT %s,%s",
                         ("%" + title + "%", offset, self.page_size))
             elif category:
-                args = ("SELECT * FROM articles where category = %s ORDER BY published DESC LIMIT %s,%s",
+                args = ("SELECT id, title, published, abstract, category FROM articles where category = %s ORDER BY published DESC LIMIT %s,%s",
                         (category, offset, self.page_size))
             else:
-                args = ("SELECT * FROM articles ORDER BY published DESC LIMIT %s,%s",
+                args = ("SELECT id, title, published, abstract, category FROM articles ORDER BY published DESC LIMIT %s,%s",
                         (offset, self.page_size))
             await cur.execute(*args)
             articles = await cur.fetchall()
 
         if not articles:
             return
-
+        print(articles)
         next_url = None
         if not page:
             self.render("home.html", articles=articles, next_url=next_url, categories=categories)
@@ -203,38 +204,42 @@ class ArticleSaveHandler(BaseHandler):
         article_id = self.get_argument("article_id")
         title = unquote(self.get_argument("title"))
         markdowncontent = unquote(self.get_argument("markdowncontent"))
+        abstract = ''.join(r.group() for r in re.finditer('\w+', markdowncontent, flags=re.M))[:188]
         content = tornado.escape.xhtml_escape(unquote(self.get_argument("content")))
         category = unquote(self.get_argument("categories"))
 
         if article_id:
             await self.execute(
-                "UPDATE articles SET title=%s, content=%s, markdowncontent=%s, category=%s, updated=%s where id=%s",
+                "UPDATE articles SET title=%s, content=%s, markdowncontent=%s, category=%s, abstract=%s, updated=%s where id=%s",
                 title,
                 content,
                 markdowncontent,
                 category,
+                abstract,
                 datetime.now(),
                 article_id
             )
         else:
             await self.insert(
-                "INSERT INTO articles (author_id,title,markdowncontent,content,category,published,updated)"
-                "VALUES (%s,%s,%s,%s,%s,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
+                "INSERT INTO articles (author_id,title,markdowncontent,content,category,abstract,published,updated)"
+                "VALUES (%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
                 self.current_user.id,
                 title,
                 markdowncontent,
                 content,
-                category
+                category,
+                abstract
             )
         self.redirect("/")
 
 
 class ArticleDetailHandler(BaseHandler):
     async def get(self, article_id):
-        categorise = ["aaa", "bbb", "ccc"]  # todo
+        _categories = await self.query("SELECT DISTINCT category FROM articles")
+        categories = [value["category"] for value in _categories]
         article = await self.queryone("SELECT * FROM articles where id = %s", article_id)
         article["content"] = html.unescape(article["content"])
-        self.render("article_detail.html", article=article, categories=categorise)
+        self.render("article_detail.html", article=article, categories=categories)
 
 
 class ArticleEditHandler(BaseHandler):

@@ -273,8 +273,8 @@ class CreateHandler(BaseHandler):
 
 
 class AuthCreateHandler(BaseHandler):
-    def get(self):
-        if self.any_author_exists():
+    async def get(self):
+        if await self.any_author_exists():
             return
         self.render("create_author.html")
 

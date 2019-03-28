@@ -339,6 +339,7 @@ async def main():
 
     # Create the global connection pool.
     async with aiomysql.create_pool(
+            maxsize=256,
             host=options.db_host,
             port=options.db_port,
             user=options.db_user,

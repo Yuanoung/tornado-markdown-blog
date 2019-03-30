@@ -783,6 +783,10 @@ body {
     font-family: Georgia, serif
 }
 
+.post-card-excerpt > p {
+    word-wrap: break-word;
+}
+
 .post-card-meta {
     display: -ms-flexbox;
     display: flex;
